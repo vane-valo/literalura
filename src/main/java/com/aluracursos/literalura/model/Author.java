@@ -2,6 +2,8 @@ package com.aluracursos.literalura.model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "authors")
 public class Author {
@@ -11,6 +13,8 @@ public class Author {
     private String authorsName;
     private Integer authorsBirthYear;
     private Integer authorsDeathYear;
+    @OneToMany(mappedBy = "bookAuthor", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Book> books;
 
     public Author(){}
 
@@ -18,6 +22,14 @@ public class Author {
         this.authorsName = authorsInfo.authorsName();
         this.authorsBirthYear = authorsInfo.authorsBirthYear();
         this.authorsDeathYear = authorsInfo.authorsDeathYear();
+    }
+
+    public List<Book> getBooks() {
+        return books;
+    }
+
+    public void setBooks(List<Book> books) {
+        this.books = books;
     }
 
     public Long getId() {

@@ -10,7 +10,7 @@ public class Book {
     private Long id;
     @Column(unique = true)
     private String bookTitle;
-    @OneToMany()
+    @ManyToOne
     private Author bookAuthor;
     private String bookLanguage;
     private Integer bookDownloadCount;

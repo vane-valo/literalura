@@ -5,10 +5,12 @@ import com.aluracursos.literalura.repository.AuthorRepository;
 import com.aluracursos.literalura.repository.BookRepository;
 import com.aluracursos.literalura.service.ConverterAPI;
 import com.aluracursos.literalura.service.RequestAPI;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Principal {
     Scanner scanner = new Scanner(System.in);
@@ -17,7 +19,15 @@ public class Principal {
     private ConverterAPI converterAPI = new ConverterAPI();
     private BookRepository bookRepository;
     private AuthorRepository authorRepository;
-private String json;
+    private String json;
+    List<Book> bookList;
+    List<Author> authorList;
+
+    public Principal(BookRepository bookRepository, AuthorRepository authorRepository) {
+        this.bookRepository = bookRepository;
+        this.authorRepository = authorRepository;
+    }
+
     public void menuApp(){
         int option = -1;
 
@@ -35,6 +45,10 @@ private String json;
 
             switch (option){
                 case 1 -> searchBookByTitle();
+                case 2 -> findAllBooks();
+                case 3 -> findAllAuthors();
+                case 4 -> findAuthorsAliveInSpecificYear();
+                case 5 -> findBooksByLanguage();
                 case 0 -> System.out.println("Logged out");
                 default -> System.out.println("Invalid option");
             }
@@ -47,18 +61,18 @@ private String json;
         json = requestAPI.getApiData(URL_BASE +
                 "?search="
                 + bookTitle.replace(" ", "%20"));
-        System.out.println(json);
+        //System.out.println(json);
         BookResult info = converterAPI.getApiData(json, BookResult.class);
         Optional<BookInfo> bookSearched = info.bookResult().stream()
                 .filter(b -> b.bookTitle().toLowerCase().contains(bookTitle.toLowerCase()))
                 .findFirst();
 
-        System.out.println(info);
-        System.out.println(bookSearched);
+        //System.out.println(info);
+        //System.out.println(bookSearched);
 
         if (bookSearched.isPresent()){
-            System.out.println("The book searched is: ");
-            System.out.println(bookSearched.get());
+            //System.out.println("The book searched is: ");
+            //System.out.println(bookSearched.get());
             return bookSearched.get();
         } else {
             System.out.println("Book not found");
@@ -72,7 +86,7 @@ private String json;
             Book book;
             AuthorsInfo authorsInfo = bookInfo.bookAuthor().getFirst();
             Author authorInDatabase = authorRepository.findByAuthorsName(authorsInfo.authorsName());
-            System.out.println(authorInDatabase);
+            //System.out.println("Author: " + authorInDatabase);
 
             if (authorInDatabase != null){
                 book = new Book(bookInfo, authorInDatabase);
@@ -83,12 +97,69 @@ private String json;
             }
             try {
                 bookRepository.save(book);
-                System.out.println(book);
+                //System.out.println(book);
             } catch (Exception e){
                 System.out.println("The book is already in registered: " + e);
             }
-        } else {
-            System.out.println("The book is not found on Gutendex");
         }
     }
+
+    private void findAllBooks(){
+        bookList = bookRepository.findAll();
+        bookList.forEach(b ->
+                System.out.println("\n-----BOOK-----" +
+                        "\nTitle: " + b.getBookTitle() +
+                        "\nAuthor: " + b.getBookAuthor().getAuthorsName() +
+                        "\nLanguage: " + b.getBookLanguage() +
+                        "\nTotal downloads: " + b.getBookDownloadCount() +
+                        "\n--------------"));
+    }
+
+    private void findAllAuthors(){
+        authorList = authorRepository.findAll();
+        authorList.forEach(a ->
+                System.out.println("\nAuthor: " + a.getAuthorsName() +
+                        "\nYear of birth: " + a.getAuthorsBirthYear() +
+                        "\nYear of death: " + a.getAuthorsDeathYear() +
+                        "\nBooks: " + a.getBooks().stream()
+                        .map(b -> b.getBookTitle()).collect(Collectors.toList())));
+    }
+
+    private void findAuthorsAliveInSpecificYear(){
+        System.out.println("Write the year: ");
+        Integer year = scanner.nextInt();
+
+        authorList = authorRepository.authorsAliveInSpecificYear(year);
+        authorList.forEach(a ->
+                System.out.println("\nAuthor: " + a.getAuthorsName() +
+                        "\nYear of birth: " + a.getAuthorsBirthYear() +
+                        "\nYear of death: " + a.getAuthorsDeathYear() +
+                        "\nBooks: " + a.getBooks().stream()
+                        .map(b -> b.getBookTitle()).collect(Collectors.toList())));
+    }
+
+    private void findBooksByLanguage(){
+        String languageOptions = """
+                es - Spanish
+                en - English
+                fr - French
+                pt - Portuguese""";
+        System.out.println("Write the language by this options: ");
+        System.out.println(languageOptions);
+        String language = scanner.next();
+
+        if (Stream.of("es", "en", "pt", "fr").anyMatch(s -> language.equals(s))){
+            bookList = bookRepository.booksByLanguage(language);
+            bookList.forEach(b ->
+                    System.out.println("\n-----BOOK-----" +
+                            "\nTitle: " + b.getBookTitle() +
+                            "\nAuthor: " + b.getBookAuthor().getAuthorsName() +
+                            "\nLanguage: " + b.getBookLanguage() +
+                            "\nTotal downloads: " + b.getBookDownloadCount() +
+                            "\n--------------"));
+        } else {
+            System.out.println("Language not found.");
+        }
+    }
+
 }
