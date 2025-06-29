@@ -71,8 +71,8 @@ public class Principal {
         //System.out.println(bookSearched);
 
         if (bookSearched.isPresent()){
-            //System.out.println("The book searched is: ");
-            //System.out.println(bookSearched.get());
+            System.out.println("The book searched is: ");
+            System.out.println(bookSearched.get());
             return bookSearched.get();
         } else {
             System.out.println("Book not found");
@@ -148,8 +148,8 @@ public class Principal {
         System.out.println(languageOptions);
         String language = scanner.next();
 
-        if (Stream.of("es", "en", "pt", "fr").anyMatch(s -> language.equals(s))){
-            bookList = bookRepository.booksByLanguage(language);
+        if (Stream.of("es", "en", "pt", "fr").anyMatch(s -> language.toLowerCase().equals(s))){
+            bookList = bookRepository.booksByLanguage(language.toLowerCase());
             bookList.forEach(b ->
                     System.out.println("\n-----BOOK-----" +
                             "\nTitle: " + b.getBookTitle() +
